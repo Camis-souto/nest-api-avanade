@@ -8,5 +8,21 @@ export class AppController {
   @Get()
   getHello(): string {
     // esta apenas redirecionando o usuário para o serviço correto.
-    return this.appService.getHello();}
+    return this.appService.getHello();
   }
+
+    @Get('/login')
+  getLogin(): string {
+    // esta apenas redirecionando o usuário para o serviço correto.
+    return this.appService.getLogin();
+  }
+
+    @Get('/register')
+    getRegister(): string {
+      // esta apenas redirecionando o usuário para o serviço correto.
+      return this.appService.getRegister();
+    }
+  }
+  
+  
+  
