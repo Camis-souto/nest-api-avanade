@@ -1,40 +1,69 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { users } from '@prisma/client';
+import { PrismaService } from '../prisma.service';
 import { CreateUserDTO } from './dto/createUser.dto';
 import { UpdateUserDTO } from './dto/updateUser.dto';
-import { PrismaService } from '../prisma.service';
-
 
 @Injectable()
 export class UsersService {
-    constructor(private prisma: PrismaService){}
+  constructor(private prisma: PrismaService) {}
 
-    async create(data: CreateUserDTO) {
-        const {name, email, password } = data;
-        const user = await this.prisma.users.create({
-            data: {
-                name,
-                email, //quando é o mesmo nome, não precisa colocar email: email. mas somente quando for exatemente igual
-                password,
-            },
-        });
-        if (!user) {
-            throw new HttpException(
-              {
-                status: HttpStatus.FORBIDDEN,
-                message: 'Erro ao criar usuário!',
-              },
-              HttpStatus.FORBIDDEN,
-            );
-          }
-        return user;
+  // await this.verifyUserExists('gabriel@email.com',false);
+  async verifyUserExists(email: string): Promise<boolean> {
+    const user = await this.prisma.users.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    return user ? true : false;
+  }
+
+  async create(data: CreateUserDTO): Promise<users> {
+    const { name, email, password } = data;
+
+    //busca pra saber se o usuário já existe.
+    //findUnique é um método do prisma que busca um usuário pelo campo único por exemplo email.
+    //findFirst é um método do prisma que busca o primeiro registro que encontrar.
+
+    //verificar se usuário já existe.
+    const checkUser = await this.verifyUserExists(email);
+    let user = undefined;
+
+    if (!checkUser) {
+      user = await this.prisma.users.create({
+        data: {
+          name,
+          email,
+          password,
+        },
+      });
     }
-    async findAll(): Promise<String> {
-        return 'Lista de usuários!';
+
+    if (!user) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          message: 'Erro ao criar usuário!',
+        },
+        HttpStatus.FORBIDDEN,
+      );
     }
-    async findOne(id: number): Promise<String> {
-        return `Usuário &{id}!`;
-    }
-    async update(id: number, req: UpdateUserDTO): Promise<string> {
-        return `Usuário ${id} atualizado com sucesso!`;
-      }
+    return user;
+  }
+
+  async findAll(): Promise<string> {
+    return 'Lista de usuários!';
+  }
+
+  async findOne(id: number): Promise<string> {
+    return `Usuário ${id}!`;
+  }
+
+  async update(id: number, req: UpdateUserDTO): Promise<string> {
+    return `Usuário ${id} atualizado com sucesso!`;
+  }
+
+  async remove(id: number): Promise<string> {
+    return `Usuário ${id} deletado com sucesso!`;
+  }
 }
